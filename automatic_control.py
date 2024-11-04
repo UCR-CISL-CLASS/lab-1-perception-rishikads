@@ -812,14 +812,44 @@ class CameraManager(object):
         inv_matrix = np.array(self.sensor.get_transform().get_inverse_matrix())
         sensor_gt_box = None
         sensor_det_box = None
+        """
         if gt_bbox is not None:
             reshape_gt_bbox = np.array(gt_bbox).reshape(-1, 3)
             sensor_gt_box = Transform.transform_with_matrix(reshape_gt_bbox, inv_matrix) 
             sensor_gt_box = np.array(sensor_gt_box).reshape(-1, gt_bbox.shape[1], 3)
+        """
+
+        if gt_bbox is not None:
+            print("gt_bbox:", gt_bbox)
+        else:
+            print("gt_bbox is None or empty")
+
         if det_bbox is not None:
-            reshape_det_bbox = np.array(det_bbox).reshape(-1, 3)
-            sensor_det_box = Transform.transform_with_matrix(reshape_det_bbox, inv_matrix)
-            sensor_det_box = np.array(sensor_det_box).reshape(-1, det_bbox.shape[1], 3)
+            print("det_bbox:", det_bbox)
+        else:
+            print("det_bbox is None or empty")
+            
+        # Process ground truth bounding boxes
+        if gt_bbox is not None and gt_bbox.ndim >= 2:
+            try:
+                reshape_gt_bbox = np.array(gt_bbox).reshape(-1, 3)
+                sensor_gt_box = Transform.transform_with_matrix(reshape_gt_bbox, inv_matrix)
+                sensor_gt_box = np.array(sensor_gt_box).reshape(-1, gt_bbox.shape[1], 3)
+            except (IndexError, ValueError) as e:
+                print(f"Error processing gt_bbox: {e}")
+        else:
+            print("Warning: gt_bbox is None or has insufficient dimensions.")
+
+        # Process detection bounding boxes
+        if det_bbox is not None and det_bbox.ndim >= 2:
+            try:
+                reshape_det_bbox = np.array(det_bbox).reshape(-1, 3)
+                sensor_det_box = Transform.transform_with_matrix(reshape_det_bbox, inv_matrix)
+                sensor_det_box = np.array(sensor_det_box).reshape(-1, det_bbox.shape[1], 3)
+            except (IndexError, ValueError) as e:
+                print(f"Error processing det_bbox: {e}")
+        else:
+            print("Warning: det_bbox is None or has insufficient dimensions.")
 
         if self.sensors[self.index][0].startswith('sensor.lidar'):
             points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
